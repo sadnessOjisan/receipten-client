@@ -44,6 +44,10 @@ impl FetchServiceExample {
                     <>
                         <p>{ "The ISS is at:" }</p>
                         <p>{format!("Latitude: {:?}", space_station.data )}</p>
+
+                   
+
+                            {for space_station.data.iter().map(|e| self.renderItem(e)) }
                     </>
                 }
             }
@@ -68,6 +72,16 @@ impl FetchServiceExample {
             html! { <p>{ error.clone() }</p> }
         } else {
             html! {}
+        }
+    }
+
+    fn renderItem(&self, item: &Item) -> Html {
+   
+        html! {
+            <tr>
+                                    <td>{ &item.itemName }</td>
+                                    <td>{ &item.itemPrice }</td>
+                                </tr>
         }
     }
 }
@@ -144,3 +158,5 @@ pub fn run_app() {
     // body タグにSPAをマウント
     App::<FetchServiceExample>::new().mount_to_body();
 }
+
+
