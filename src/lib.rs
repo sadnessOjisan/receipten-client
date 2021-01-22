@@ -43,7 +43,7 @@ impl FetchServiceExample {
                 html! {
                     <>
                         <p>{ "The ISS is at:" }</p>
-                        <p>{ space_station.data }</p>
+                        <p>{format!("Latitude: {:?}", space_station.data )}</p>
                     </>
                 }
             }
