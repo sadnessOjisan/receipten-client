@@ -1,11 +1,7 @@
 // requires the serde and anyhow crates
 use wasm_bindgen::prelude::*;
 use serde::Deserialize;
-use yew::{
-    format::{Json, Nothing},
-    prelude::*,
-    services::fetch::{FetchService, FetchTask, Request, Response},
-};
+use yew::{format::{Json, Nothing}, prelude::*, services::fetch::{FetchService, FetchTask, Request, Response}, web_sys::console::info};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct ISSPosition {
@@ -13,23 +9,28 @@ pub struct ISSPosition {
     longitude: String,
 }
 
+
 #[derive(Deserialize, Debug, Clone)]
-pub struct ISS {
-    message: String,
-    timestamp: i32,
-    iss_position: ISSPosition,
+pub struct Item {
+    itemName: String,
+    itemPrice: String,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct ResponseData {
+    data: Vec<Item>
 }
 
 #[derive(Debug)]
 pub enum Msg {
     GetLocation,
-    ReceiveResponse(Result<ISS, anyhow::Error>),
+    ReceiveResponse(Result<ResponseData, anyhow::Error>),
 }
 
 #[derive(Debug)]
 pub struct FetchServiceExample {
     fetch_task: Option<FetchTask>,
-    iss: Option<ISS>,
+    iss: Option<ResponseData>,
     link: ComponentLink<Self>,
     error: Option<String>,
 }
@@ -42,8 +43,7 @@ impl FetchServiceExample {
                 html! {
                     <>
                         <p>{ "The ISS is at:" }</p>
-                        <p>{ format!("Latitude: {}", space_station.iss_position.latitude) }</p>
-                        <p>{ format!("Longitude: {}", space_station.iss_position.longitude) }</p>
+                        <p>{ space_station.data }</p>
                     </>
                 }
             }
@@ -92,13 +92,13 @@ impl Component for FetchServiceExample {
         match msg {
             GetLocation => {
                 // 1. build the request
-                let request = Request::get("http://api.open-notify.org/iss-now.json")
+                let request = Request::get("https://receipten-backend.ojisan.vercel.app/api/get-items?id=JtvoNq7CnSUU6HvB1QPK")
                     .body(Nothing)
                     .expect("Could not build request.");
                 // 2. construct a callback
                 let callback =
                     self.link
-                        .callback(|response: Response<Json<Result<ISS, anyhow::Error>>>| {
+                        .callback(|response: Response<Json<Result<ResponseData, anyhow::Error>>>| {
                             let Json(data) = response.into_body();
                             Msg::ReceiveResponse(data)
                         });
