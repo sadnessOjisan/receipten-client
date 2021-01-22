@@ -1,101 +1,138 @@
+// requires the serde and anyhow crates
 use wasm_bindgen::prelude::*;
-use yew::{format::{Json, Nothing}, prelude::*, services::{fetch::{self, FetchTask, Request, Response}}};
-use yew::services::fetch::{FetchService};
+use serde::Deserialize;
+use yew::{
+    format::{Json, Nothing},
+    prelude::*,
+    services::fetch::{FetchService, FetchTask, Request, Response},
+};
 
-struct Model {
-    // リンクコンポーネント -> コンポーネントがコールバックを登録できて自身を更新することができるメカニズム
-    fetch_service: FetchService,
+#[derive(Deserialize, Debug, Clone)]
+pub struct ISSPosition {
+    latitude: String,
+    longitude: String,
+}
+
+#[derive(Deserialize, Debug, Clone)]
+pub struct ISS {
+    message: String,
+    timestamp: i32,
+    iss_position: ISSPosition,
+}
+
+#[derive(Debug)]
+pub enum Msg {
+    GetLocation,
+    ReceiveResponse(Result<ISS, anyhow::Error>),
+}
+
+#[derive(Debug)]
+pub struct FetchServiceExample {
+    fetch_task: Option<FetchTask>,
+    iss: Option<ISS>,
     link: ComponentLink<Self>,
-    value: i64,
-    fetching: bool,
-    data: Option<u32>,
-    ft: Option<FetchTask>,
+    error: Option<String>,
 }
-
-enum Msg {
-    AddOne,  FetchData,
-    FetchReady(Result<Item, Error>), // 2.
-    Ignore,
+/// Some of the code to render the UI is split out into smaller functions here to make the code
+/// cleaner and show some useful design patterns.
+impl FetchServiceExample {
+    fn view_iss_location(&self) -> Html {
+        match self.iss {
+            Some(ref space_station) => {
+                html! {
+                    <>
+                        <p>{ "The ISS is at:" }</p>
+                        <p>{ format!("Latitude: {}", space_station.iss_position.latitude) }</p>
+                        <p>{ format!("Longitude: {}", space_station.iss_position.longitude) }</p>
+                    </>
+                }
+            }
+            None => {
+                html! {
+                     <button onclick=self.link.callback(|_| Msg::GetLocation)>
+                         { "Where is the ISS?" }
+                     </button>
+                }
+            }
+        }
+    }
+    fn view_fetching(&self) -> Html {
+        if self.fetch_task.is_some() {
+            html! { <p>{ "Fetching data..." }</p> }
+        } else {
+            html! { <p></p> }
+        }
+    }
+    fn view_error(&self) -> Html {
+        if let Some(ref error) = self.error {
+            html! { <p>{ error.clone() }</p> }
+        } else {
+            html! {}
+        }
+    }
 }
-
-struct Item {
-    itemName: String,
-    itemPrice: i32,
-    fetching: bool,
-    data: Option<u32>,
-    ft: Option<FetchTask>,
-}
-
-
-impl Component for Model {
-
-    // Componentトレイトの関連型
-    // コンポーネントによって処理され、何らかの副作用を引き起こすことができるさまざまなメッセージを表
+impl Component for FetchServiceExample {
     type Message = Msg;
-
-    // Componentトレイトの関連型
-    // Propertiesは、親からコンポーネントに渡される情報
     type Properties = ();
 
-    // props と link の初期化に使う. 
-    fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
+    fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
         Self {
+            fetch_task: None,
+            iss: None,
             link,
-            value: 0,
-            fetch_service: FetchService::default(),
-            fetching: false,
-            data: None,
-            ft: None,
+            error: None,
         }
     }
-
-    // メッセージごとに呼び出されます
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        match msg {
-            Msg::AddOne =>{ self.value += 1}
-            Msg::FetchData => {
-                self.fetching = true; // 4.
-
-                let callback = self.link.send_message(
-                    move |response: Response<Json<Result<Item, Error>>>| { // 2.
-                        let (meta, Json(data)) = response.into_parts();
-                        if meta.status.is_success() {
-                            Msg::FetchReady(data)
-                        } else {
-                            Msg::Ignore
-                        }
-                    },
-                );
-                let request = Request::get("/data.json").body(Nothing).unwrap(); // 5.
-
-                let task = FetchService::fetch(request, callback);
-            }
-            Msg::FetchReady(response) => {
-                self.fetching = false; // 4.
-                self.data = response.map(|data| data.value).ok(); // 6.
-            }
-            Msg::Ignore => {
-                return false;
-            }
-        }
-        true
-    }
-
-    // 再レンダリングの管理
-    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
-        // Should only return "true" if new properties are different to
-        // previously received properties.
-        // This component has no properties so we will always return "false".
+    fn change(&mut self, _props: Self::Properties) -> bool {
         false
     }
+    fn update(&mut self, msg: Self::Message) -> bool {
+        use Msg::*;
 
+        match msg {
+            GetLocation => {
+                // 1. build the request
+                let request = Request::get("http://api.open-notify.org/iss-now.json")
+                    .body(Nothing)
+                    .expect("Could not build request.");
+                // 2. construct a callback
+                let callback =
+                    self.link
+                        .callback(|response: Response<Json<Result<ISS, anyhow::Error>>>| {
+                            let Json(data) = response.into_body();
+                            Msg::ReceiveResponse(data)
+                        });
+                // 3. pass the request and callback to the fetch service
+                let task = FetchService::fetch(request, callback).expect("failed to start request");
+                // 4. store the task so it isn't canceled immediately
+                self.fetch_task = Some(task);
+                // we want to redraw so that the page displays a 'fetching...' message to the user
+                // so return 'true'
+                true
+            }
+            ReceiveResponse(response) => {
+                match response {
+                    Ok(location) => {
+                        self.iss = Some(location);
+                    }
+                    Err(error) => {
+                        self.error = Some(error.to_string())
+                    }
+                }
+                self.fetch_task = None;
+                // we want to redraw so that the page displays the location of the ISS instead of
+                // 'fetching...'
+                true
+            }
+        }
+    }
     fn view(&self) -> Html {
         html! {
-            <div>
-                // 実行時にコンポーネントの更新メカニズムにメッセージを送信するコールバックを登録
-                <button onclick=self.link.callback(|_| Msg::AddOne)>{ "+1" }</button>
-                <p>{ self.value }</p>
-            </div>
+            <>
+                { self.view_fetching() }
+                { self.view_iss_location() }
+                { self.view_error() }
+            </>
         }
     }
 }
@@ -105,26 +142,5 @@ impl Component for Model {
 pub fn run_app() {
     wasm_logger::init(wasm_logger::Config::default());
     // body タグにSPAをマウント
-    App::<Model>::new().mount_to_body();
+    App::<FetchServiceExample>::new().mount_to_body();
 }
-
-
-
-
-
-
-
-
-
-// let get_request = Request::get("https://receipten-backend.ojisan.vercel.app/api/get-items?id=JtvoNq7CnSUU6HvB1QPK")
-// .body(Nothing)
-// .expect("Could not build that request");
-// info!("Update: {:?}", get_request);
-
-// let callback = link.callback(|response: Response<Result<String, Error>>| {
-// if response.status().is_success() {
-//     Msg::Noop
-// } else {
-//     Msg::Error
-// }
-// })
