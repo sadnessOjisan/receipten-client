@@ -1,0 +1,2 @@
+# receipten-client
+receipten のフロント
