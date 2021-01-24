@@ -1,3 +1,40 @@
-* {
-  background-color: red;
+body {
+  font-size: 16px;
+}
+
+h1 {
+  text-align: center;
+  margin: 0;
+  margin-bottom: 36px;
+}
+
+h1 > span {
+  border-top: solid 4px black;
+  border-bottom: solid 4px black;
+  padding: 4px;
+}
+
+.container {
+  max-width: 400px;
+  width: 100%;
+  margin: 0 auto;
+  border: solid 4px black;
+  padding: 12px;
+  padding-top: 36px;
+}
+
+.item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 24px 0;
+}
+
+.left {
+  width: 50%;
+}
+
+.right {
+  width: 30%;
+  text-align: right;
 }

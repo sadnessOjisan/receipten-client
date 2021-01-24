@@ -26,7 +26,6 @@ pub struct ResponseData {
 
 #[derive(Debug)]
 pub enum Msg {
-    StartFetchData,
     SuccessFetchData(Result<ResponseData, anyhow::Error>),
 }
 
@@ -52,9 +51,7 @@ impl Receipt {
             }
             None => {
                 html! {
-                     <button onclick=self.link.callback(|_| Msg::StartFetchData)>
-                         { "refetch" }
-                     </button>
+                     <></>
                 }
             }
         }
@@ -76,10 +73,10 @@ impl Receipt {
 
     fn renderItem(&self, item: &Item) -> Html {
         html! {
-            <tr>
-                                    <td>{ &item.itemName }</td>
-                                    <td>{ &item.itemPrice }</td>
-                                </tr>
+            <div class="item">
+                  <div class="left">{ &item.itemName }</div>
+                   <div class="right">{ &item.itemPrice }</div>
+            </div>
         }
     }
 }
@@ -119,29 +116,6 @@ impl Component for Receipt {
         use Msg::*;
 
         match msg {
-            StartFetchData => {
-                // 1. build the request
-                let request = Request::get(format!(
-                    "https://receipten-backend.ojisan.vercel.app/api/get-items?id={}",
-                    self.id
-                ))
-                .body(Nothing)
-                .expect("Could not build request.");
-                // 2. construct a callback
-                let callback = self.link.callback(
-                    |response: Response<Json<Result<ResponseData, anyhow::Error>>>| {
-                        let Json(data) = response.into_body();
-                        Msg::SuccessFetchData(data)
-                    },
-                );
-                // 3. pass the request and callback to the fetch service
-                let task = FetchService::fetch(request, callback).expect("failed to start request");
-                // 4. store the task so it isn't canceled immediately
-                self.fetch_task = Some(task);
-                // we want to redraw so that the page displays a 'fetching...' message to the user
-                // so return 'true'
-                true
-            }
             SuccessFetchData(response) => {
                 match response {
                     Ok(data) => {
@@ -158,11 +132,15 @@ impl Component for Receipt {
     }
     fn view(&self) -> Html {
         html! {
-            <>
+            <div class="container">
+            <h1><span>{"おのうえ商店"}</span></h1>
                 { self.fetching() }
                 { self.success() }
                 { self.error() }
-            </>
+           <a href={format!("https://twitter.com/intent/tweet?text=こんなに長いレシートを作っちゃった！ https://receipten.web.app/{}/item/{}", "%23", self.id)} target="_blank">
+             <button>{"Twitter でシェアする"}</button>
+            </a>
+            </div>
         }
     }
 }

@@ -12,6 +12,6 @@ wasm-pack build --target web --out-name wasm --out-dir ./public
 
 ## TODO
 
-- [ ] routing から id 取得
-- [ ] id を使ってデータ取得
-- [ ] データを UI に表示
+- [x] routing から id 取得
+- [x] id を使ってデータ取得
+- [x] データを UI に表示
