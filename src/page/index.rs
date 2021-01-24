@@ -8,7 +8,6 @@ use yew::{
     web_sys::console::info,
 };
 
-
 #[derive(Clone, Debug, Eq, PartialEq, Properties)]
 pub struct Props {
     pub id: String,
