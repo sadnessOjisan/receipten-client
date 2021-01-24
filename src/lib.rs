@@ -10,13 +10,13 @@ use yew::{
 use yew_router::{components::RouterAnchor, prelude::*, switch::Permissive};
 use yew_router::{prelude::*, Switch};
 mod page;
-use page::index::FetchServiceExample;
+use page::index::Receipt;
 use yew::virtual_dom::VNode;
 
 #[derive(Clone, Debug, Switch)]
 pub enum AppRoute {
     #[to = "/#/item/{id}"]
-    FetchServiceExample { id: String },
+    Receipt { id: String },
 }
 
 pub enum Msg {
@@ -45,7 +45,7 @@ impl Component for Model {
             Msg::ChangeRoute(route) => {
                 // This might be derived in the future
                 let route_string = match route {
-                    AppRoute::FetchServiceExample { id: String } => {
+                    AppRoute::Receipt { id: String } => {
                         format!("/item/")
                     }
                 };
@@ -76,7 +76,7 @@ impl Component for Model {
             <>
             {
                 match AppRoute::switch(self.route.clone()) {
-                    Some(AppRoute::FetchServiceExample{id}) => html!{<FetchServiceExample id=id />},
+                    Some(AppRoute::Receipt{id}) => html!{<Receipt id=id />},
                     None => VNode::from("404")
                 }
             }

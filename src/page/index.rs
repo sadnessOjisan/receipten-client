@@ -8,11 +8,6 @@ use yew::{
     web_sys::console::info,
 };
 
-#[derive(Deserialize, Debug, Clone)]
-pub struct ISSPosition {
-    latitude: String,
-    longitude: String,
-}
 
 #[derive(Clone, Debug, Eq, PartialEq, Properties)]
 pub struct Props {
@@ -32,52 +27,47 @@ pub struct ResponseData {
 
 #[derive(Debug)]
 pub enum Msg {
-    GetLocation,
-    ReceiveResponse(Result<ResponseData, anyhow::Error>),
+    StartFetchData,
+    SuccessFetchData(Result<ResponseData, anyhow::Error>),
 }
 
 #[derive(Debug)]
-pub struct FetchServiceExample {
+pub struct Receipt {
     fetch_task: Option<FetchTask>,
-    iss: Option<ResponseData>,
+    data: Option<ResponseData>,
     link: ComponentLink<Self>,
     error: Option<String>,
     id: String,
 }
 /// Some of the code to render the UI is split out into smaller functions here to make the code
 /// cleaner and show some useful design patterns.
-impl FetchServiceExample {
-    fn view_iss_location(&self) -> Html {
-        match self.iss {
-            Some(ref space_station) => {
+impl Receipt {
+    fn success(&self) -> Html {
+        match self.data {
+            Some(ref res) => {
                 html! {
                     <>
-                        <p>{ "The ISS is at:" }</p>
-                        <p>{format!("Latitude: {:?}", space_station.data )}</p>
-
-
-
-                            {for space_station.data.iter().map(|e| self.renderItem(e)) }
+                            {for res.data.iter().map(|e| self.renderItem(e)) }
                     </>
                 }
             }
             None => {
                 html! {
-                     <button onclick=self.link.callback(|_| Msg::GetLocation)>
-                         { "Where is the ISS?" }
+                     <button onclick=self.link.callback(|_| Msg::StartFetchData)>
+                         { "refetch" }
                      </button>
                 }
             }
         }
     }
-    fn view_fetching(&self) -> Html {
+    fn fetching(&self) -> Html {
         if self.fetch_task.is_some() {
             html! { <p>{ "Fetching data..." }</p> }
         } else {
             html! { <p></p> }
         }
     }
-    fn view_error(&self) -> Html {
+    fn error(&self) -> Html {
         if let Some(ref error) = self.error {
             html! { <p>{ error.clone() }</p> }
         } else {
@@ -94,14 +84,30 @@ impl FetchServiceExample {
         }
     }
 }
-impl Component for FetchServiceExample {
+impl Component for Receipt {
     type Message = Msg;
     type Properties = Props;
 
     fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
+        let request = Request::get(format!(
+            "https://receipten-backend.ojisan.vercel.app/api/get-items?id={}",
+            _props.id
+        ))
+        .body(Nothing)
+        .expect("Could not build request.");
+        // 2. construct a callback
+        let callback = link.callback(
+            |response: Response<Json<Result<ResponseData, anyhow::Error>>>| {
+                let Json(data) = response.into_body();
+                Msg::SuccessFetchData(data)
+            },
+        );
+        // 3. pass the request and callback to the fetch service
+        let task = FetchService::fetch(request, callback).expect("failed to start request");
+        // 4. store the task so it isn't canceled immediately
         Self {
-            fetch_task: None,
-            iss: None,
+            fetch_task: Some(task),
+            data: None,
             link,
             error: None,
             id: _props.id,
@@ -114,7 +120,7 @@ impl Component for FetchServiceExample {
         use Msg::*;
 
         match msg {
-            GetLocation => {
+            StartFetchData => {
                 // 1. build the request
                 let request = Request::get(format!(
                     "https://receipten-backend.ojisan.vercel.app/api/get-items?id={}",
@@ -126,7 +132,7 @@ impl Component for FetchServiceExample {
                 let callback = self.link.callback(
                     |response: Response<Json<Result<ResponseData, anyhow::Error>>>| {
                         let Json(data) = response.into_body();
-                        Msg::ReceiveResponse(data)
+                        Msg::SuccessFetchData(data)
                     },
                 );
                 // 3. pass the request and callback to the fetch service
@@ -137,15 +143,15 @@ impl Component for FetchServiceExample {
                 // so return 'true'
                 true
             }
-            ReceiveResponse(response) => {
+            SuccessFetchData(response) => {
                 match response {
-                    Ok(location) => {
-                        self.iss = Some(location);
+                    Ok(data) => {
+                        self.data = Some(data);
                     }
                     Err(error) => self.error = Some(error.to_string()),
                 }
                 self.fetch_task = None;
-                // we want to redraw so that the page displays the location of the ISS instead of
+                // we want to redraw so that the page displays the data of the data instead of
                 // 'fetching...'
                 true
             }
@@ -154,9 +160,9 @@ impl Component for FetchServiceExample {
     fn view(&self) -> Html {
         html! {
             <>
-                { self.view_fetching() }
-                { self.view_iss_location() }
-                { self.view_error() }
+                { self.fetching() }
+                { self.success() }
+                { self.error() }
             </>
         }
     }
