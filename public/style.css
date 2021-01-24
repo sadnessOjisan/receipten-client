@@ -21,13 +21,16 @@ h1 > span {
   border: solid 4px black;
   padding: 12px;
   padding-top: 36px;
+  min-height: 90vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .item {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 24px 0;
+  margin: 12px 0;
 }
 
 .left {
@@ -43,6 +46,7 @@ h1 > span {
   margin-top: 48px;
   display: flex;
   flex-direction: column;
+  margin-top: auto;
 }
 
 .bottom a {
