@@ -4,10 +4,10 @@ receipten のフロント
 
 ```sh
 # dev
-miniserve ./static --index index.html
+miniserve ./public --index index.html
 
 # build
-wasm-pack build --target web --out-name wasm --out-dir ./static
+wasm-pack build --target web --out-name wasm --out-dir ./public
 ```
 
 ## TODO
