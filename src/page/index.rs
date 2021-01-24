@@ -137,9 +137,14 @@ impl Component for Receipt {
                 { self.fetching() }
                 { self.success() }
                 { self.error() }
-           <a href={format!("https://twitter.com/intent/tweet?text=こんなに長いレシートを作っちゃった！ https://receipten.web.app/{}/item/{}", "%23", self.id)} target="_blank">
-             <button>{"Twitter でシェアする"}</button>
-            </a>
+          <div class="bottom">
+          <a href={format!("https://twitter.com/intent/tweet?text=こんなに長いレシートを作っちゃった！ https://receipten.web.app/{}/item/{}", "%23", self.id)} target="_blank">
+          <button>{"Twitter でシェアする"}</button>
+         </a>
+         <a href={"https://kjsdfjfweijwefi.com"} target="_blank">
+          <button>{"レシート作成 Chrome 拡張を入れる"}</button>
+         </a>
+          </div>
             </div>
         }
     }

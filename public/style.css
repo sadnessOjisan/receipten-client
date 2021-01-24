@@ -38,3 +38,18 @@ h1 > span {
   width: 30%;
   text-align: right;
 }
+
+.bottom {
+  margin-top: 48px;
+  display: flex;
+  flex-direction: column;
+}
+
+.bottom a {
+  width: 100%;
+}
+
+.bottom button {
+  width: 100%;
+  margin-top: 12px;
+}
