@@ -10,8 +10,8 @@ use yew::virtual_dom::VNode;
 
 #[derive(Clone, Debug, Switch)]
 pub enum AppRoute {
-    #[to = "/item/{id}"]
-    FetchServiceExample{id:i32},
+    #[to = "/#/item/{id}"]
+    FetchServiceExample{id:String},
 }
 
 pub enum Msg {
@@ -43,7 +43,7 @@ impl Component for Model {
             Msg::ChangeRoute(route) => {
                 // This might be derived in the future
                 let route_string = match route {
-                    AppRoute::FetchServiceExample { id:i32 } => {format!("/item/")},
+                    AppRoute::FetchServiceExample { id:String } => {format!("/item/")},
                 };
                 self.route_service.set_route(&route_string, ());
                 self.route = Route {
@@ -74,11 +74,9 @@ impl Component for Model {
             {
                 match AppRoute::switch(self.route.clone()) {
                     Some(AppRoute::FetchServiceExample{id}) => html!{<FetchServiceExample id=id />},
-                    None => html!{<FetchServiceExample id=1 />},
+                    None => VNode::from("404")
                 }
-            }
-
-         
+            }         
             </>
         }
     }

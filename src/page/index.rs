@@ -12,7 +12,7 @@ pub struct ISSPosition {
 
 #[derive(Clone, Debug, Eq, PartialEq, Properties)]
 pub struct Props {
-    pub id: i32,
+    pub id: String,
 }
 
 #[derive(Deserialize, Debug, Clone)]
@@ -38,6 +38,7 @@ pub struct FetchServiceExample {
     iss: Option<ResponseData>,
     link: ComponentLink<Self>,
     error: Option<String>,
+    id: String
 }
 /// Some of the code to render the UI is split out into smaller functions here to make the code
 /// cleaner and show some useful design patterns.
@@ -100,6 +101,7 @@ impl Component for FetchServiceExample {
             iss: None,
             link,
             error: None,
+            id: _props.id
         }
     }
     fn change(&mut self, _props: Self::Properties) -> bool {
@@ -111,7 +113,7 @@ impl Component for FetchServiceExample {
         match msg {
             GetLocation => {
                 // 1. build the request
-                let request = Request::get("https://receipten-backend.ojisan.vercel.app/api/get-items?id=JtvoNq7CnSUU6HvB1QPK")
+                let request = Request::get(format!("https://receipten-backend.ojisan.vercel.app/api/get-items?id={}", self.id))
                     .body(Nothing)
                     .expect("Could not build request.");
                 // 2. construct a callback
