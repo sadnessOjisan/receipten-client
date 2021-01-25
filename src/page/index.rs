@@ -37,8 +37,7 @@ pub struct Receipt {
     error: Option<String>,
     id: String,
 }
-/// Some of the code to render the UI is split out into smaller functions here to make the code
-/// cleaner and show some useful design patterns.
+
 impl Receipt {
     fn success(&self) -> Html {
         match self.data {
@@ -73,10 +72,10 @@ impl Receipt {
 
     fn renderItem(&self, item: &Item) -> Html {
         html! {
-            <div class="item">
+            <a class="item" href=format!("https://www.mercari.com/jp/search/?keyword={}", &item.itemName) target="_blank">
                   <div class="left">{ &item.itemName }</div>
                    <div class="right">{ &item.itemPrice }</div>
-            </div>
+            </a>
         }
     }
 }
@@ -98,9 +97,7 @@ impl Component for Receipt {
                 Msg::SuccessFetchData(data)
             },
         );
-        // 3. pass the request and callback to the fetch service
         let task = FetchService::fetch(request, callback).expect("failed to start request");
-        // 4. store the task so it isn't canceled immediately
         Self {
             fetch_task: Some(task),
             data: None,
@@ -124,8 +121,6 @@ impl Component for Receipt {
                     Err(error) => self.error = Some(error.to_string()),
                 }
                 self.fetch_task = None;
-                // we want to redraw so that the page displays the data of the data instead of
-                // 'fetching...'
                 true
             }
         }
@@ -141,7 +136,7 @@ impl Component for Receipt {
           <a href={format!("https://twitter.com/intent/tweet?text=こんなに長いレシートを作っちゃった！ https://receipten.web.app/{}/item/{}", "%23", self.id)} target="_blank">
           <button>{"Twitter でシェアする"}</button>
          </a>
-         <a href={"https://kjsdfjfweijwefi.com"} target="_blank">
+         <a href={"https://github.com/sadnessOjisan/receipten-extension/releases/latest/download/dist.zip"} target="_blank">
           <button>{"レシート作成 Chrome 拡張を入れる"}</button>
          </a>
           </div>

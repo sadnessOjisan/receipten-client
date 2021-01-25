@@ -25,12 +25,23 @@ h1 > span {
   display: flex;
   flex-direction: column;
 }
+a {
+  color: inherit;
+}
+a:visited {
+  color: inherit;
+}
 
 .item {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin: 12px 0;
+  text-decoration: none;
+}
+
+.item:hover {
+  text-decoration: underline;
 }
 
 .left {
