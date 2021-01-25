@@ -138,9 +138,6 @@ impl Component for Receipt {
           <a href={format!("https://twitter.com/intent/tweet?text=こんなに長いレシートを作っちゃった！ https://receipten.web.app/{}/item/{}", "%23", self.id)} target="_blank">
           <button>{"Twitter でシェアする"}</button>
          </a>
-         <a href={"https://github.com/sadnessOjisan/receipten-extension/releases/latest/download/dist.zip"} target="_blank">
-          <button>{"レシート作成 Chrome 拡張を入れる"}</button>
-         </a>
           </div>
             </div>
         }
