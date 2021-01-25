@@ -32,6 +32,10 @@ a:visited {
   color: inherit;
 }
 
+.sum {
+  text-align: right;
+}
+
 .item {
   display: flex;
   align-items: center;

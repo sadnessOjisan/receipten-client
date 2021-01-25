@@ -22,6 +22,7 @@ pub struct Item {
 #[derive(Deserialize, Debug, Clone)]
 pub struct ResponseData {
     data: Vec<Item>,
+    sum: i32
 }
 
 #[derive(Debug)]
@@ -45,6 +46,7 @@ impl Receipt {
                 html! {
                     <>
                             {for res.data.iter().map(|e| self.renderItem(e)) }
+                            <p class="sum">{"小計: "}{res.sum}<span>{"円"}</span></p>
                     </>
                 }
             }
